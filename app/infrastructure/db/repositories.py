@@ -52,12 +52,13 @@ class SQLAnalysisRepository(AnalysisRepository):
         )
         self.session.add(db_job)
         await self.session.commit()
+        await self.session.refresh(db_job)
         
         return AnalysisJob(
-            id=job_id,
-            url=url,
-            status="QUEUED",
-            created_at=created_at
+            id=db_job.id,
+            url=db_job.url,
+            status=db_job.status,
+            created_at=db_job.created_at
         )
     
     async def get_job(self, job_id: UUID) -> Optional[AnalysisJob]:
@@ -215,9 +216,6 @@ class SQLAnalysisRepository(AnalysisRepository):
             )
             for d in drafts_result.scalars().all()
         ]
-        
-        if not competitors and not keywords and not content_drafts:
-            return None
         
         if not competitors and not keywords and not content_drafts:
             return None

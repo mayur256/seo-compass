@@ -23,24 +23,38 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
-@router.post("/analyze", response_model=AnalyzeResponse, status_code=200)
+@router.post(
+    "/analyze", 
+    response_model=AnalyzeResponse, 
+    status_code=200,
+    summary="Submit URL for SEO Analysis",
+    description="Submit a URL for comprehensive SEO analysis including competitor research, keyword extraction, and content generation.",
+    response_description="Analysis job created successfully"
+)
 async def analyze_url(
     request: AnalyzeRequest,
     db: AsyncSession = Depends(get_db)
 ) -> AnalyzeResponse:
-    """Submit URL for SEO analysis.
+    """Submit URL for comprehensive SEO analysis.
     
-    Creates a new analysis job and enqueues it for background processing.
+    This endpoint creates a new analysis job that will:
+    - Discover top competitors via SERP analysis
+    - Extract keywords using HTML parsing and TF-IDF
+    - Generate SEO-optimized content drafts using AI
+    
+    The analysis runs asynchronously in the background. Use the returned job_id
+    to check status and retrieve results.
     
     Args:
-        request: Contains the URL to analyze
-        db: Database session
+        request: Contains the URL to analyze (must be valid HTTP/HTTPS URL)
+        db: Database session dependency
         
     Returns:
-        AnalyzeResponse with job_id and status
+        AnalyzeResponse containing job_id and initial status (QUEUED)
         
     Raises:
-        HTTPException: If URL validation fails
+        HTTPException 400: Invalid URL format
+        HTTPException 500: Internal server error
     """
     try:
         repository = SQLAnalysisRepository(db)
@@ -57,24 +71,34 @@ async def analyze_url(
         raise HTTPException(status_code=500, detail="Failed to create analysis job")
 
 
-@router.get("/jobs/{job_id}", response_model=JobStatusResponse)
+@router.get(
+    "/jobs/{job_id}", 
+    response_model=JobStatusResponse,
+    summary="Get Job Status",
+    description="Retrieve the current status and details of an analysis job.",
+    response_description="Job status and details"
+)
 async def get_job_status(
     job_id: UUID,
     db: AsyncSession = Depends(get_db)
 ) -> JobStatusResponse:
-    """Get analysis job status.
+    """Get analysis job status and progress.
     
-    Retrieves the current status and details of an analysis job.
+    Track the progress of your SEO analysis job. Status transitions:
+    - QUEUED: Job is waiting to be processed
+    - IN_PROGRESS: Analysis is currently running
+    - COMPLETED: Analysis finished successfully
+    - FAILED: Analysis encountered an error
     
     Args:
-        job_id: UUID of the analysis job
-        db: Database session
+        job_id: UUID of the analysis job (returned from /analyze endpoint)
+        db: Database session dependency
         
     Returns:
-        JobStatusResponse with job details and current status
+        JobStatusResponse with current status, timestamps, and URL
         
     Raises:
-        HTTPException: If job is not found
+        HTTPException 404: Job not found
     """
     repository = SQLAnalysisRepository(db)
     use_case = GetJobStatusUseCase(repository)
@@ -92,27 +116,41 @@ async def get_job_status(
     )
 
 
-@router.get("/analyze/{job_id}", response_model=ReportResponse)
+@router.get(
+    "/analyze/{job_id}", 
+    response_model=ReportResponse,
+    summary="Get Analysis Results",
+    description="Retrieve comprehensive SEO analysis results with optional section filtering.",
+    response_description="Complete or filtered analysis results"
+)
 async def get_analysis_results(
     job_id: UUID,
-    section: Optional[str] = Query(None, description="Filter by section: competitors, keywords, or drafts"),
+    section: Optional[str] = Query(
+        None, 
+        description="Filter results by section",
+        enum=["competitors", "keywords", "drafts"]
+    ),
     db: AsyncSession = Depends(get_db)
 ) -> ReportResponse:
-    """Get analysis results with optional section filtering.
+    """Get comprehensive SEO analysis results.
     
-    Retrieves analysis results for a job, optionally filtered by section.
-    Supports partial results for jobs in progress.
+    Retrieve the complete analysis results or filter by specific sections:
+    - competitors: Top ranking competitors with traffic estimates
+    - keywords: Extracted keywords with search volume and difficulty
+    - drafts: AI-generated SEO-optimized content drafts
+    
+    Results are available even for jobs in progress (partial data).
     
     Args:
         job_id: UUID of the analysis job
-        section: Optional section filter (competitors|keywords|drafts)
-        db: Database session
+        section: Optional filter - 'competitors', 'keywords', or 'drafts'
+        db: Database session dependency
         
     Returns:
-        ReportResponse with analysis results
+        ReportResponse with complete or filtered analysis data
         
     Raises:
-        HTTPException: If job is not found
+        HTTPException 404: Job not found
     """
     repository = SQLAnalysisRepository(db)
     
@@ -172,16 +210,25 @@ async def get_analysis_results(
     )
 
 
-@router.get("/reports/{job_id}", response_model=ReportResponse)
+@router.get(
+    "/reports/{job_id}", 
+    response_model=ReportResponse,
+    summary="Get Complete Report (Legacy)",
+    description="Legacy endpoint for retrieving complete analysis reports.",
+    response_description="Complete analysis report",
+    deprecated=True
+)
 async def get_report(
     job_id: UUID,
     db: AsyncSession = Depends(get_db)
 ) -> ReportResponse:
     """Get complete analysis report (legacy endpoint).
     
+    **Deprecated**: Use `/analyze/{job_id}` instead for better functionality.
+    
     Args:
         job_id: UUID of the analysis job
-        db: Database session
+        db: Database session dependency
         
     Returns:
         ReportResponse with complete analysis results

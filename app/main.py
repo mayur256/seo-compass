@@ -27,9 +27,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SEO Compass",
-    description="SEO analysis automation tool",
+    description="Automated SEO Analysis & Content Generation Platform - Transform any URL into comprehensive SEO insights with competitor analysis, keyword research, and AI-generated content drafts.",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "SEO Compass API",
+        "url": "https://github.com/your-repo/seo-compass",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
 )
 
 
