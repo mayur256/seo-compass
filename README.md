@@ -267,13 +267,47 @@ curl "http://localhost:8000/v1/jobs/{job_id}"
 
 **4. Get Results:**
 ```bash
+# Get analysis results
 curl "http://localhost:8000/v1/analyze/{job_id}"
+
+# Get structured report
+curl "http://localhost:8000/v1/reports/{job_id}"
+
+# Download complete report as ZIP
+curl -O -J "http://localhost:8000/v1/reports/{job_id}/download"
 ```
 
 ### 📚 API Documentation
 
 **Interactive Docs:** http://localhost:8000/docs
 **OpenAPI Schema:** http://localhost:8000/openapi.json
+
+## 📊 Report & Download Endpoints
+
+### Get Structured Report
+```bash
+# Get complete report
+curl "http://localhost:8000/v1/reports/{job_id}"
+
+# Get specific sections
+curl "http://localhost:8000/v1/reports/{job_id}?section=competitors"
+curl "http://localhost:8000/v1/reports/{job_id}?section=keywords"
+curl "http://localhost:8000/v1/reports/{job_id}?section=drafts"
+```
+
+### Download Complete Report as ZIP
+```bash
+# Download ZIP file with CSVs and content drafts
+curl -O -J "http://localhost:8000/v1/reports/{job_id}/download"
+
+# The ZIP contains:
+# - competitors.csv
+# - keywords.csv  
+# - drafts/home.txt
+# - drafts/services.txt
+# - drafts/about.txt
+# - report_metadata.json
+```
 
 ## 🛠️ Development
 
