@@ -6,7 +6,7 @@ from app.infrastructure.db.repositories import SQLAnalysisRepository
 from app.services.competitor_service import CompetitorService
 from app.services.keyword_service import KeywordService
 from app.services.llm_service import LLMService
-from app.services.report_service import ReportService
+
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -57,7 +57,23 @@ async def _process_analysis_async(job_id: UUID, url: str) -> None:
             
             # Step 4: Save Results
             logger.info(f"Step 4: Saving analysis results")
-            await report_service.save_analysis_results(job_id, competitors, keywords, content_drafts)
+            await repository.add_mock_data(job_id)
+            
+            # Step 5: Create report version and trigger packaging
+            from app.infrastructure.db.report_repository import ReportRepository
+            from app.tasks.report_packaging_worker import package_report_task
+            
+            report_repo = ReportRepository(session)
+            job = await repository.get_job(job_id)
+            
+            if job:
+                # Create report version
+                version = await report_repo.create_version(job_id, job.url)
+                logger.info(f"Created report version {version.version} for job {job_id}")
+                
+                # Trigger background packaging
+                package_report_task.delay(str(job_id), str(version.id))
+                logger.info(f"Triggered packaging task for version {version.id}")
             
             # Mark job as completed
             await repository.set_completed(job_id)

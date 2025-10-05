@@ -50,3 +50,29 @@ class ReportResponse(BaseModel):
     competitors: Optional[List[CompetitorOut]] = None
     keywords: Optional[List[KeywordOut]] = None
     drafts: Optional[List[DraftOut]] = None
+
+
+class ReportVersionOut(BaseModel):
+    """Report version output schema."""
+    id: UUID
+    job_id: UUID
+    version: int
+    url: str
+    status: str
+    s3_zip_url: Optional[str] = None
+    created_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+
+class ReportHistoryOut(BaseModel):
+    """Report history response schema."""
+    data: List[ReportVersionOut]
+    pagination: dict
+
+
+class PackagingStatusOut(BaseModel):
+    """Packaging status response schema."""
+    job_id: UUID
+    version_id: UUID
+    status: str
+    progress: int

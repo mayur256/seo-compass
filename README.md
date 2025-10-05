@@ -309,6 +309,21 @@ curl -O -J "http://localhost:8000/v1/reports/{job_id}/download"
 # - report_metadata.json
 ```
 
+### Report History & Versioning
+```bash
+# Get report history with pagination
+curl "http://localhost:8000/v1/reports/history?limit=10&page=1"
+
+# Filter by URL
+curl "http://localhost:8000/v1/reports/history?url=https://example.com"
+
+# Filter by status
+curl "http://localhost:8000/v1/reports/history?status=COMPLETED"
+
+# Check packaging status
+curl "http://localhost:8000/v1/reports/{job_id}/packaging-status"
+```
+
 ## 🛠️ Development
 
 ### Available Commands
@@ -399,6 +414,10 @@ seo-compass/
 | `SECRET_KEY` | Application secret key | ✅ | `your-secret-key` |
 | `DEBUG` | Debug mode | ❌ | `true` |
 | `LOG_LEVEL` | Logging level | ❌ | `INFO` |
+| `S3_BUCKET_NAME` | S3 bucket for report storage | ✅ | `seo-compass-reports` |
+| `AWS_REGION` | AWS region | ✅ | `us-east-1` |
+| `AWS_ACCESS_KEY_ID` | AWS access key | ✅ | `your-aws-access-key` |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key | ✅ | `your-aws-secret-key` |
 
 ### 🔑 Getting API Keys
 

@@ -44,6 +44,7 @@ def main():
         ("python3 -m pytest tests/test_analysis_pipeline.py -v --tb=short", "Pipeline Integration Tests"),
         ("python3 -m pytest tests/test_analysis_endpoints.py -v --tb=short", "API Endpoint Tests"),
         ("python3 -m pytest tests/test_reports.py -v --tb=short", "Report & Download Tests"),
+        ("python3 -m pytest tests/test_report_versioning.py -v --tb=short", "Report Versioning Tests"),
     ]
     
     passed_tests = 0

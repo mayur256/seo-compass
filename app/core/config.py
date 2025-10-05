@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., description="Secret key")
     debug: bool = Field(default=False, description="Debug mode")
     log_level: str = Field(default="INFO", description="Log level")
+    
+    # S3 Configuration
+    s3_bucket_name: str = Field(default="seo-compass-reports", description="S3 bucket name")
+    aws_region: str = Field(default="us-east-1", description="AWS region")
+    aws_access_key_id: str = Field(default="", description="AWS access key ID")
+    aws_secret_access_key: str = Field(default="", description="AWS secret access key")
 
 
 @lru_cache()
