@@ -1,74 +1,160 @@
-# SEO Compass: Initial Scope of Work (V1) and User Stories Document
+# SEO Compass
 
-## 1. Executive Summary and Project Goals 🎯
+SEO analysis automation tool that transforms a single URL into a comprehensive SEO strategy report and draft content.
 
-The objective of the **SEO Compass** project is to create a Minimum Viable Product (MVP) web application that automates the initial, labor-intensive phases of SEO strategy. By simply submitting a website URL, the application will automatically perform **competitive research** and generate **SEO-optimized content drafts**. This tool will drastically reduce the time needed to formulate a new website's content and keyword strategy.
+## Architecture
 
-| Element | Description |
-| :--- | :--- |
-| **Product Name** | **SEO Compass** (Working Title) |
-| **Core Value** | Transforms a single URL into a comprehensive SEO strategy report and draft content. |
-| **Primary Goal** | Successful and reliable delivery of the full analysis and content report within **5 minutes** of job submission. |
-| **Target Audience** | SEO Consultants, Marketing Managers, and Small Business Owners. |
+This project follows Clean Architecture principles with the following layers:
 
----
+- **Domain**: Core business entities and types (`app/domain/`)
+- **Application**: Use cases and business logic (`app/application/`)
+- **Infrastructure**: External services, database, and frameworks (`app/infrastructure/`)
+- **Interfaces**: API endpoints and request/response handling (`app/interfaces/`)
 
-## 2. In-Scope Features (MVP)
+## Tech Stack
 
-This section defines the core features the development team will build for the initial release (V1).
+- **FastAPI**: Async web framework
+- **PostgreSQL**: Database with async SQLAlchemy 2.0
+- **Celery + Redis**: Background task processing
+- **Pydantic v2**: Data validation and settings
+- **Docker**: Containerization for local development
 
-### 2.1. System Architecture & Submission
+## Quick Start
 
-| Feature | Technical Description (For Engineers) | Stakeholder Interpretation (For Business) |
-| :--- | :--- | :--- |
-| **URL Submission Interface** | A responsive front-end form that posts a URL string to the backend's `/analyze` API endpoint. | A simple, clear input box where the user starts the process. |
-| **Asynchronous Processing** | Implementation of a **Python web framework (Flask/Django)** paired with a **Task Queue (Celery/Redis)** to offload long-running analysis jobs to background workers. | The system won't freeze or crash while waiting for the complex analysis to finish; it will run in the background. |
-| **Results Persistence** | Use of a **PostgreSQL** or **MongoDB** database to store all analysis data and generated content files permanently. | All reports are saved securely and can be retrieved by the user at any time. |
+### Prerequisites
 
-### 2.2. Core Analysis Pipeline
+- Python 3.11+
+- Docker and Docker Compose
 
-| Feature | Technical Description (For Engineers) | Stakeholder Interpretation (For Business) |
-| :--- | :--- | :--- |
-| **Competitor Discovery** | Integration with a **SERP API** (e.g., Semrush, SerpApi) to perform automated searches based on the input URL's primary topic and extract the top 10 organic results. | The system finds and identifies the **top 5-10 direct competitors** ranking on Google for the user's niche. |
-| **Primary Keyword Extraction** | Scripts will analyze the input URL's meta tags, title, and body copy to identify and report on 10 relevant, high-traffic keywords for the niche. | We learn exactly what terms are driving traffic in the user's market and what to target. |
+### Setup
 
-### 2.3. Output and Reporting
+1. **Clone and configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database credentials and API keys
+   ```
 
-| Feature | Technical Description (For Engineers) | Stakeholder Interpretation (For Business) |
-| :--- | :--- | :--- |
-| **LLM-Based Content Drafts** | Integration with a **Large Language Model (LLM) API** (e.g., GPT-4) to generate initial, structured drafts for three predetermined pages (e.g., Home, Services, About Us) based on the discovered keywords. | The AI automatically writes **human-like content drafts** for the most important pages of the user's website. |
-| **Report Dashboard** | A dedicated page that retrieves and formats the stored analysis data, presenting it in an easily digestible format (tables and lists). | A simple, clean results page where users can view all the competitive data and content drafts. |
-| **Report Download** | A function to package all generated data and content into a single downloadable file (e.g., **CSV** for data and **PDF/TXT** for content). | A one-click option to get all the data and drafts for sharing and offline use. |
+2. **Build and start services**:
+   ```bash
+   make build && make up
+   ```
 
----
+3. **Run database migrations**:
+   ```bash
+   make migrate
+   ```
 
-## 3. Out-of-Scope Features (V1) 🚧
+4. **Verify installation**:
+   ```bash
+   curl http://localhost:8000/health
+   # Should return: {"status": "ok", "app": "seo-compass", "version": "0.1.0"}
+   ```
 
-The following features are **excluded** from the initial MVP release but are noted for potential future development.
+## API Usage
 
-* User authentication (login/signup) and billing/payment integration.
-* Off-page SEO analysis (e.g., backlink checking, domain authority analysis).
-* In-app content editing or publishing features (only plain text drafts are provided).
-* Continuous website monitoring or recurring analysis.
+### Submit URL for Analysis
 
----
+```bash
+curl -X POST "http://localhost:8000/v1/analyze" \
+     -H "Content-Type: application/json" \
+     -d '{"url": "https://example.com"}'
+```
 
-## 4. User Stories (What the User Can Do)
+Response:
+```json
+{
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "QUEUED"
+}
+```
 
-User stories define the functionality from the user's perspective.
+### Check Job Status
 
-### A. Core Submission and Reporting
+```bash
+curl "http://localhost:8000/v1/jobs/{job_id}"
+```
 
-| ID | User Story | Acceptance Criteria (Definition of Done) |
-| :--- | :--- | :--- |
-| **US-101** | **As a** Small Business Owner, **I want to** paste my URL and click 'Analyze', **so that** I can easily start the SEO strategy process. | The input form successfully posts a valid URL and displays a confirmation message that the job has started. |
-| **US-102** | **As an** SEO Specialist, **I want to** check the job status on the dashboard, **so that** I know when the detailed analysis report is ready to view. | The dashboard displays a job status (e.g., "Queued," "In Progress," "Complete"). |
-| **US-103** | **As a** Marketing Manager, **I want to** view a clear list of the **top 5 ranking competitor websites** **so that** I can assess the competitive strength in my market. | The final report table displays the competitor's URL, the primary keyword they rank for, and estimated traffic (from the SERP API). |
+### Get Analysis Report
 
-### B. Strategy and Content Generation
+```bash
+curl "http://localhost:8000/v1/reports/{job_id}"
+```
 
-| ID | User Story | Acceptance Criteria (Definition of Done) |
-| :--- | :--- | :--- |
-| **US-201** | **As a** Content Creator, **I want to** see a list of the **top 10 relevant keywords** with their search volume and difficulty, **so that** I can prioritize my content plan. | The report includes a table of researched keywords with relevant metrics from the chosen SEO API. |
-| **US-202** | **As an** SEO Consultant, **I want to** access three automatically generated, structured **content drafts** (e.g., for Homepage, About, Service) **so that** I have immediate, SEO-focused copy to edit. | The LLM successfully generates and saves three unique, structured drafts that integrate the identified keywords. |
-| **US-203** | **As a** User, **I want to** download the entire report and all content drafts in a single zip file **so that** I can easily share the deliverables with my team offline. | A clearly labeled "Download Full Report" button is implemented and functional, bundling all files. |
+## Development
+
+### Available Commands
+
+```bash
+make build    # Build Docker images
+make up       # Start all services
+make down     # Stop all services
+make migrate  # Run database migrations
+make test     # Run tests
+make lint     # Run linting and type checking
+make format   # Format code
+```
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Quality
+
+```bash
+# Linting
+ruff check .
+
+# Type checking
+mypy .
+
+# Formatting
+black .
+```
+
+## Project Structure
+
+```
+seo_compass/
+├── app/
+│   ├── main.py                    # FastAPI application
+│   ├── core/                      # Configuration and logging
+│   ├── domain/                    # Business entities and types
+│   ├── application/usecases/      # Business use cases
+│   ├── infrastructure/            # External services and database
+│   ├── interfaces/http/           # API endpoints
+│   ├── tasks/                     # Celery background tasks
+│   └── schemas/                   # Pydantic request/response models
+├── tests/                         # Test suite
+├── alembic/                       # Database migrations
+├── docker-compose.yml             # Local development services
+└── pyproject.toml                 # Project configuration
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+- `DATABASE_URL`: PostgreSQL connection string
+- `REDIS_URL`: Redis connection string
+- `SERP_API_KEY`: SERP API key for competitor research
+- `LLM_API_KEY`: OpenAI or other LLM API key
+- `SECRET_KEY`: Application secret key
+
+## Next Steps (Stage 2)
+
+The current implementation provides:
+- ✅ Working FastAPI app with health checks
+- ✅ Database models and migrations
+- ✅ Celery task processing
+- ✅ Typed domain entities and use cases
+- ✅ API endpoints for analysis workflow
+
+**TODO for Stage 2**:
+- Implement real SERP API integration
+- Add LLM prompt engineering for content generation
+- Enhance keyword extraction logic
+- Add comprehensive error handling
+- Implement rate limiting and job queuing
+- Add authentication and user management
