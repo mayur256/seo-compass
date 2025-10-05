@@ -36,6 +36,8 @@ def main():
     checks = [
         ("python -m pytest tests/test_health.py -v", "Health Check Tests"),
         ("python -m pytest tests/test_analyze_flow.py -v", "Analysis Flow Tests"),
+        ("python -m pytest tests/services/ -v", "Service Tests"),
+        ("python -m pytest tests/test_analysis_pipeline.py -v", "Pipeline Integration Tests"),
         ("python -c \"from app.main import app; print('✅ App imports successfully')\"", "App Import Test"),
     ]
     

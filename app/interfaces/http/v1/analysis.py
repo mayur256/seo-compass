@@ -1,5 +1,6 @@
+from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.db.base import get_db
 from app.infrastructure.db.repositories import SQLAnalysisRepository
@@ -14,6 +15,8 @@ from app.schemas.request_response import (
     KeywordResponse,
     ContentDraftResponse
 )
+from app.schemas.analysis_schemas import PartialAnalysisResponse
+from app.services.report_service import ReportService
 from app.core.logging import get_logger
 
 router = APIRouter()
@@ -89,28 +92,53 @@ async def get_job_status(
     )
 
 
-@router.get("/reports/{job_id}", response_model=ReportResponse)
-async def get_report(
+@router.get("/analyze/{job_id}", response_model=ReportResponse)
+async def get_analysis_results(
     job_id: UUID,
+    section: Optional[str] = Query(None, description="Filter by section: competitors, keywords, or drafts"),
     db: AsyncSession = Depends(get_db)
 ) -> ReportResponse:
-    """Get analysis report."""
+    """Get analysis results with optional section filtering.
+    
+    Retrieves analysis results for a job, optionally filtered by section.
+    Supports partial results for jobs in progress.
+    
+    Args:
+        job_id: UUID of the analysis job
+        section: Optional section filter (competitors|keywords|drafts)
+        db: Database session
+        
+    Returns:
+        ReportResponse with analysis results
+        
+    Raises:
+        HTTPException: If job is not found
+    """
     repository = SQLAnalysisRepository(db)
     
-    # Check if job exists and is completed
+    # Check if job exists
     job_use_case = GetJobStatusUseCase(repository)
     job = await job_use_case.execute(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    if job.status != "COMPLETED":
-        raise HTTPException(status_code=400, detail=f"Job not completed. Status: {job.status}")
-    
-    # Get report
+    # Get report (even if job is still in progress)
     report_use_case = GetReportUseCase(repository)
     report = await report_use_case.execute(job_id)
+    
     if not report:
-        raise HTTPException(status_code=404, detail="Report not found")
+        # Return empty response if no results yet
+        return ReportResponse(
+            job_id=job_id,
+            competitors=[],
+            keywords=[],
+            content_drafts=[]
+        )
+    
+    # Filter by section if requested
+    competitors = report.competitors if section != "keywords" and section != "drafts" else []
+    keywords = report.keywords if section != "competitors" and section != "drafts" else []
+    content_drafts = report.content_drafts if section != "competitors" and section != "keywords" else []
     
     return ReportResponse(
         job_id=report.job_id,
@@ -121,7 +149,7 @@ async def get_report(
                 ranking_position=c.ranking_position,
                 estimated_traffic=c.estimated_traffic
             )
-            for c in report.competitors
+            for c in competitors
         ],
         keywords=[
             KeywordResponse(
@@ -130,7 +158,7 @@ async def get_report(
                 difficulty=k.difficulty,
                 cpc=k.cpc
             )
-            for k in report.keywords
+            for c in keywords
         ],
         content_drafts=[
             ContentDraftResponse(
@@ -139,6 +167,23 @@ async def get_report(
                 content=d.content,
                 meta_description=d.meta_description
             )
-            for d in report.content_drafts
+            for d in content_drafts
         ]
     )
+
+
+@router.get("/reports/{job_id}", response_model=ReportResponse)
+async def get_report(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db)
+) -> ReportResponse:
+    """Get complete analysis report (legacy endpoint).
+    
+    Args:
+        job_id: UUID of the analysis job
+        db: Database session
+        
+    Returns:
+        ReportResponse with complete analysis results
+    """
+    return await get_analysis_results(job_id, None, db)
