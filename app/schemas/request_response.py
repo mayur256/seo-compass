@@ -16,6 +16,7 @@ class AnalyzeResponse(BaseModel):
 
 class JobStatusResponse(BaseModel):
     job_id: UUID
+    url: str
     status: JobStatus
     created_at: datetime
     completed_at: Optional[datetime] = None

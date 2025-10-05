@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import func
 from app.domain.entities import AnalysisJob, Report, Competitor, Keyword, ContentDraft
 from app.domain.types import JobStatus
 from .base import AnalysisJobModel, CompetitorModel, KeywordModel, ContentDraftModel
@@ -10,7 +12,7 @@ from .base import AnalysisJobModel, CompetitorModel, KeywordModel, ContentDraftM
 
 class AnalysisRepository(ABC):
     @abstractmethod
-    async def create_job(self, job: AnalysisJob) -> None:
+    async def create_job(self, url: str) -> AnalysisJob:
         pass
     
     @abstractmethod
@@ -18,11 +20,15 @@ class AnalysisRepository(ABC):
         pass
     
     @abstractmethod
-    async def update_job_status(self, job_id: UUID, status: JobStatus) -> None:
+    async def update_status(self, job_id: UUID, status: JobStatus) -> None:
         pass
     
     @abstractmethod
-    async def save_report(self, report: Report) -> None:
+    async def set_completed(self, job_id: UUID) -> None:
+        pass
+    
+    @abstractmethod
+    async def add_mock_data(self, job_id: UUID) -> None:
         pass
     
     @abstractmethod
@@ -34,16 +40,25 @@ class SQLAnalysisRepository(AnalysisRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
     
-    async def create_job(self, job: AnalysisJob) -> None:
+    async def create_job(self, url: str) -> AnalysisJob:
+        job_id = uuid4()
+        created_at = datetime.utcnow()
+        
         db_job = AnalysisJobModel(
-            id=job.id,
-            url=job.url,
-            status=job.status,
-            created_at=job.created_at,
-            completed_at=job.completed_at
+            id=job_id,
+            url=url,
+            status="QUEUED",
+            created_at=created_at
         )
         self.session.add(db_job)
         await self.session.commit()
+        
+        return AnalysisJob(
+            id=job_id,
+            url=url,
+            status="QUEUED",
+            created_at=created_at
+        )
     
     async def get_job(self, job_id: UUID) -> Optional[AnalysisJob]:
         result = await self.session.execute(
@@ -61,7 +76,7 @@ class SQLAnalysisRepository(AnalysisRepository):
             completed_at=db_job.completed_at
         )
     
-    async def update_job_status(self, job_id: UUID, status: JobStatus) -> None:
+    async def update_status(self, job_id: UUID, status: JobStatus) -> None:
         await self.session.execute(
             update(AnalysisJobModel)
             .where(AnalysisJobModel.id == job_id)
@@ -69,39 +84,92 @@ class SQLAnalysisRepository(AnalysisRepository):
         )
         await self.session.commit()
     
-    async def save_report(self, report: Report) -> None:
-        # Save competitors
-        for competitor in report.competitors:
-            db_competitor = CompetitorModel(
-                job_id=report.job_id,
-                url=competitor.url,
-                title=competitor.title,
-                ranking_position=competitor.ranking_position,
-                estimated_traffic=competitor.estimated_traffic
+    async def set_completed(self, job_id: UUID) -> None:
+        await self.session.execute(
+            update(AnalysisJobModel)
+            .where(AnalysisJobModel.id == job_id)
+            .values(status="COMPLETED", completed_at=func.now())
+        )
+        await self.session.commit()
+    
+    async def add_mock_data(self, job_id: UUID) -> None:
+        # Add mock competitors
+        competitors = [
+            CompetitorModel(
+                job_id=job_id,
+                url="https://competitor1.com",
+                title="Top Competitor 1",
+                ranking_position=1,
+                estimated_traffic=50000
+            ),
+            CompetitorModel(
+                job_id=job_id,
+                url="https://competitor2.com",
+                title="Top Competitor 2",
+                ranking_position=2,
+                estimated_traffic=35000
+            ),
+            CompetitorModel(
+                job_id=job_id,
+                url="https://competitor3.com",
+                title="Top Competitor 3",
+                ranking_position=3,
+                estimated_traffic=25000
             )
-            self.session.add(db_competitor)
+        ]
         
-        # Save keywords
-        for keyword in report.keywords:
-            db_keyword = KeywordModel(
-                job_id=report.job_id,
-                term=keyword.term,
-                search_volume=keyword.search_volume,
-                difficulty=keyword.difficulty,
-                cpc=keyword.cpc
+        # Add mock keywords
+        keywords = [
+            KeywordModel(
+                job_id=job_id,
+                term="business services",
+                search_volume=10000,
+                difficulty=0.6,
+                cpc=2.50
+            ),
+            KeywordModel(
+                job_id=job_id,
+                term="professional consulting",
+                search_volume=8000,
+                difficulty=0.7,
+                cpc=3.20
+            ),
+            KeywordModel(
+                job_id=job_id,
+                term="expert solutions",
+                search_volume=5000,
+                difficulty=0.5,
+                cpc=1.80
             )
-            self.session.add(db_keyword)
+        ]
         
-        # Save content drafts
-        for draft in report.content_drafts:
-            db_draft = ContentDraftModel(
-                job_id=report.job_id,
-                page_type=draft.page_type,
-                title=draft.title,
-                content=draft.content,
-                meta_description=draft.meta_description
+        # Add mock content drafts
+        drafts = [
+            ContentDraftModel(
+                job_id=job_id,
+                page_type="homepage",
+                title="Welcome to Your Business",
+                content="Professional homepage content optimized for your target keywords.",
+                meta_description="Professional services for your business needs"
+            ),
+            ContentDraftModel(
+                job_id=job_id,
+                page_type="about",
+                title="About Our Company",
+                content="Learn more about our company and our mission to provide excellent services.",
+                meta_description="Learn about our company history and values"
+            ),
+            ContentDraftModel(
+                job_id=job_id,
+                page_type="services",
+                title="Our Services",
+                content="We offer comprehensive services tailored to your business needs.",
+                meta_description="Explore our range of professional services"
             )
-            self.session.add(db_draft)
+        ]
+        
+        for item in competitors + keywords + drafts:
+            self.session.add(item)
         
         await self.session.commit()
     
@@ -147,6 +215,9 @@ class SQLAnalysisRepository(AnalysisRepository):
             )
             for d in drafts_result.scalars().all()
         ]
+        
+        if not competitors and not keywords and not content_drafts:
+            return None
         
         if not competitors and not keywords and not content_drafts:
             return None

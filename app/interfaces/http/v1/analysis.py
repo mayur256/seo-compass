@@ -14,22 +14,44 @@ from app.schemas.request_response import (
     KeywordResponse,
     ContentDraftResponse
 )
+from app.core.logging import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
-@router.post("/analyze", response_model=AnalyzeResponse)
+@router.post("/analyze", response_model=AnalyzeResponse, status_code=200)
 async def analyze_url(
     request: AnalyzeRequest,
     db: AsyncSession = Depends(get_db)
 ) -> AnalyzeResponse:
-    """Submit URL for SEO analysis."""
-    repository = SQLAnalysisRepository(db)
-    use_case = SubmitAnalysisUseCase(repository)
+    """Submit URL for SEO analysis.
     
-    job_id = await use_case.execute(str(request.url))
+    Creates a new analysis job and enqueues it for background processing.
     
-    return AnalyzeResponse(job_id=job_id, status="QUEUED")
+    Args:
+        request: Contains the URL to analyze
+        db: Database session
+        
+    Returns:
+        AnalyzeResponse with job_id and status
+        
+    Raises:
+        HTTPException: If URL validation fails
+    """
+    try:
+        repository = SQLAnalysisRepository(db)
+        use_case = SubmitAnalysisUseCase(repository)
+        
+        job_id, status = await use_case.execute(str(request.url))
+        
+        return AnalyzeResponse(job_id=job_id, status=status)
+    except ValueError as e:
+        logger.error(f"URL validation failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to create analysis job: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create analysis job")
 
 
 @router.get("/jobs/{job_id}", response_model=JobStatusResponse)
@@ -37,7 +59,20 @@ async def get_job_status(
     job_id: UUID,
     db: AsyncSession = Depends(get_db)
 ) -> JobStatusResponse:
-    """Get analysis job status."""
+    """Get analysis job status.
+    
+    Retrieves the current status and details of an analysis job.
+    
+    Args:
+        job_id: UUID of the analysis job
+        db: Database session
+        
+    Returns:
+        JobStatusResponse with job details and current status
+        
+    Raises:
+        HTTPException: If job is not found
+    """
     repository = SQLAnalysisRepository(db)
     use_case = GetJobStatusUseCase(repository)
     
@@ -47,6 +82,7 @@ async def get_job_status(
     
     return JobStatusResponse(
         job_id=job.id,
+        url=job.url,
         status=job.status,
         created_at=job.created_at,
         completed_at=job.completed_at

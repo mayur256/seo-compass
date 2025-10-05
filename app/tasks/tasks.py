@@ -1,11 +1,9 @@
 import asyncio
+import time
 from uuid import UUID
 from app.tasks.celery_app import celery_app
 from app.infrastructure.db.base import AsyncSessionLocal
 from app.infrastructure.db.repositories import SQLAnalysisRepository
-from app.infrastructure.external.serp_client import SerpClient
-from app.infrastructure.external.llm_client import LLMClient
-from app.domain.entities import Report
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -26,46 +24,22 @@ async def _process_analysis_async(job_id: UUID, url: str) -> None:
         
         try:
             # Update job status to IN_PROGRESS
-            await repository.update_job_status(job_id, "IN_PROGRESS")
+            await repository.update_status(job_id, "IN_PROGRESS")
+            logger.info(f"Job {job_id} status updated to IN_PROGRESS")
             
-            # Initialize clients
-            serp_client = SerpClient()
-            llm_client = LLMClient()
+            # Simulate processing time (3 seconds)
+            time.sleep(3)
+            logger.info(f"Processing simulation completed for job {job_id}")
             
-            try:
-                # Fetch competitors
-                competitors = await serp_client.fetch_top_competitors(url)
-                logger.info(f"Found {len(competitors)} competitors")
-                
-                # Extract keywords
-                keywords = await llm_client.extract_keywords(url)
-                logger.info(f"Extracted {len(keywords)} keywords")
-                
-                # Generate content drafts
-                keyword_terms = [k.term for k in keywords]
-                content_drafts = await llm_client.generate_drafts(keyword_terms)
-                logger.info(f"Generated {len(content_drafts)} content drafts")
-                
-                # Create report
-                report = Report(
-                    job_id=job_id,
-                    competitors=competitors,
-                    keywords=keywords,
-                    content_drafts=content_drafts
-                )
-                
-                # Save report to database
-                await repository.save_report(report)
-                
-                # Update job status to COMPLETED
-                await repository.update_job_status(job_id, "COMPLETED")
-                logger.info(f"Analysis completed for job {job_id}")
-                
-            finally:
-                await serp_client.close()
-                await llm_client.close()
+            # Add mock data to database
+            await repository.add_mock_data(job_id)
+            logger.info(f"Mock data added for job {job_id}")
+            
+            # Mark job as completed
+            await repository.set_completed(job_id)
+            logger.info(f"Analysis completed for job {job_id}")
                 
         except Exception as e:
             logger.error(f"Analysis failed for job {job_id}: {str(e)}")
-            await repository.update_job_status(job_id, "FAILED")
+            await repository.update_status(job_id, "FAILED")
             raise
