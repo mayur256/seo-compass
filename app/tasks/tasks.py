@@ -6,11 +6,11 @@ from app.infrastructure.db.repositories import SQLAnalysisRepository
 from app.services.competitor_service import CompetitorService
 from app.services.keyword_service import KeywordService
 from app.services.llm_service import LLMService
+from app.services.report_service import ReportService
 
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
-
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def process_analysis(self, job_id: str, url: str) -> None:
