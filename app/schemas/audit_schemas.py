@@ -101,6 +101,14 @@ class ScrapedData(BaseModel):
     mixed_content_count: int = 0
     unsafe_links_count: int = 0
     
+    # DNS & Email Security
+    spf_record: bool = False
+    dmarc_record: bool = False
+    mx_records: bool = False
+    ipv6_support: bool = False
+    has_verification: bool = False
+    plaintext_emails: int = 0
+    
     # Keywords
     keyword_density: Dict[str, float] = {}
     most_common_keywords: List[str] = []

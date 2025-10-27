@@ -10,6 +10,7 @@ from urllib.parse import urljoin, urlparse
 from app.schemas.audit_schemas import ScrapedData
 from app.core.logging import get_logger
 from app.services.core_web_vitals_service import CoreWebVitalsService
+from app.services.dns_service import DNSService
 
 logger = get_logger(__name__)
 
@@ -40,6 +41,10 @@ class SEOScraperService:
             # Get Core Web Vitals
             cwv_service = CoreWebVitalsService()
             core_web_vitals = await cwv_service.collect_metrics(url)
+            
+            # Get DNS records
+            dns_service = DNSService()
+            dns_records = await dns_service.check_dns_records(url)
             
             if response.status_code != 200:
                 logger.warning(f"Non-200 status code {response.status_code} for {url}")
@@ -110,6 +115,7 @@ class SEOScraperService:
             # Security checks
             mixed_content_count = self._count_mixed_content(soup, url)
             unsafe_links_count = self._count_unsafe_links(soup)
+            plaintext_emails = self._count_plaintext_emails(soup)
             
             # External checks
             robots_txt_exists = await self._check_robots_txt(url)
@@ -186,6 +192,14 @@ class SEOScraperService:
                 hsts_header=hsts_header,
                 mixed_content_count=mixed_content_count,
                 unsafe_links_count=unsafe_links_count,
+                
+                # DNS & Email Security
+                spf_record=dns_records.get('spf_record', False),
+                dmarc_record=dns_records.get('dmarc_record', False),
+                mx_records=dns_records.get('mx_records', False),
+                ipv6_support=dns_records.get('ipv6_support', False),
+                has_verification=dns_records.get('has_verification', False),
+                plaintext_emails=plaintext_emails,
                 
                 # Keywords
                 keyword_density=keyword_data['density'],
@@ -320,6 +334,14 @@ class SEOScraperService:
             if 'noopener' not in rel or 'noreferrer' not in rel:
                 count += 1
         return count
+    
+    def _count_plaintext_emails(self, soup: BeautifulSoup) -> int:
+        """Count plaintext email addresses in content"""
+        text_content = soup.get_text()
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        import re
+        emails = re.findall(email_pattern, text_content)
+        return len(emails)
 
     def _check_gzip_compression(self, response: httpx.Response) -> bool:
         return 'gzip' in response.headers.get('content-encoding', '').lower()

@@ -308,6 +308,56 @@ class SEOEvaluatorService:
                 "evaluate": lambda data: data.js_execution_time < 2.0,
                 "get_value": lambda data: f"{data.js_execution_time:.2f}s",
                 "recommendation": "Optimize JavaScript execution time."
+            },
+            
+            # DNS & Email Security
+            {
+                "name": "SPF Record",
+                "category": "Email Security",
+                "priority": "medium",
+                "evaluate": lambda data: data.spf_record,
+                "get_value": lambda data: "Present" if data.spf_record else "Missing",
+                "recommendation": "Add SPF record to prevent email spoofing."
+            },
+            {
+                "name": "DMARC Record",
+                "category": "Email Security",
+                "priority": "medium",
+                "evaluate": lambda data: data.dmarc_record,
+                "get_value": lambda data: "Present" if data.dmarc_record else "Missing",
+                "recommendation": "Add DMARC record for email authentication."
+            },
+            {
+                "name": "MX Records",
+                "category": "Email Security",
+                "priority": "low",
+                "evaluate": lambda data: data.mx_records,
+                "get_value": lambda data: "Configured" if data.mx_records else "Not configured",
+                "recommendation": "Configure MX records for email delivery."
+            },
+            {
+                "name": "IPv6 Support",
+                "category": "Technical SEO",
+                "priority": "low",
+                "evaluate": lambda data: data.ipv6_support,
+                "get_value": lambda data: "Supported" if data.ipv6_support else "Not supported",
+                "recommendation": "Add AAAA records for IPv6 support."
+            },
+            {
+                "name": "Domain Verification",
+                "category": "Technical SEO",
+                "priority": "medium",
+                "evaluate": lambda data: data.has_verification,
+                "get_value": lambda data: "Verified" if data.has_verification else "Not verified",
+                "recommendation": "Add domain verification records for search engines."
+            },
+            {
+                "name": "Plaintext Emails",
+                "category": "Security",
+                "priority": "low",
+                "evaluate": lambda data: data.plaintext_emails == 0,
+                "get_value": lambda data: f"Exposed: {data.plaintext_emails}",
+                "recommendation": "Avoid exposing email addresses to prevent spam."
             }
         ]
 
