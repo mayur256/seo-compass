@@ -55,15 +55,15 @@ export default function HomePage() {
           </p>
           
           <div className="flex items-center justify-center gap-4">
-            <Link href="/analyze">
+            <Link href="/audit">
               <Button size="lg" className="px-8">
                 <FiTarget className="w-5 h-5 mr-2" />
-                Start SEO Analysis
+                SEO Audit Tool
               </Button>
             </Link>
-            <Link href="/jobs">
+            <Link href="/analyze">
               <Button variant="outline" size="lg" className="px-8">
-                View Analysis Jobs
+                SEO Analysis
               </Button>
             </Link>
           </div>

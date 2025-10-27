@@ -12,6 +12,7 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
   const navigation = [
     { name: 'Home', href: '/', icon: FiCompass },
     { name: 'Start Analysis', href: '/analyze', icon: FiSearch },
+    { name: 'SEO Audit', href: '/audit', icon: FiFileText },
     { name: 'Jobs', href: '/jobs', icon: FiBriefcase },
   ];
 

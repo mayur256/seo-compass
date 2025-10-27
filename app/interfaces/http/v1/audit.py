@@ -42,24 +42,31 @@ async def create_audit(
             common_issues=common_issues
         )
         
-        report_service = SEOReportService()
-        audit_id = uuid.uuid4()
-        pdf_filename = f"seo_audit_{audit_id}.pdf"
-        pdf_path = f"/tmp/reports/{pdf_filename}"
-        await report_service.generate_pdf_report(audit_result, pdf_path)
-        
-        # Save to database
+        # Save to database first to get audit ID
         repository = AuditRepository(session)
-        await repository.create_audit(
+        audit = await repository.create_audit(
             url=str(request.url),
             overall_score=overall_score,
             issues_json=issues_json,
             recommendations_json=recommendations_json,
-            pdf_path=pdf_path
+            pdf_path=None  # Will update after PDF generation
         )
         
+        # Generate PDF with actual audit ID
+        report_service = SEOReportService()
+        pdf_filename = f"seo_audit_{audit.id}.pdf"
+        pdf_path = f"/tmp/reports/{pdf_filename}"
+        await report_service.generate_pdf_report(audit_result, pdf_path)
+        
+        # Update audit with PDF path
+        await repository.update_pdf_path(audit.id, pdf_path)
+        
         logger.info(f"SEO audit completed for {request.url}")
-        return audit_result
+        # Return result with audit ID for download
+        return {
+            **audit_result.dict(),
+            "audit_id": str(audit.id)
+        }
         
     except Exception as e:
         logger.error(f"Error creating audit: {e}")
