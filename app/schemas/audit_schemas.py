@@ -127,6 +127,38 @@ class ScrapedData(BaseModel):
     adwords_traffic: int = 0
     adwords_cost: float = 0.0
     
+    # Performance Monitoring APIs
+    mobile_performance_score: int = 0
+    mobile_accessibility_score: int = 0
+    mobile_best_practices_score: int = 0
+    mobile_seo_score: int = 0
+    desktop_performance_score: int = 0
+    desktop_accessibility_score: int = 0
+    desktop_best_practices_score: int = 0
+    desktop_seo_score: int = 0
+    mobile_fcp: float = 0.0
+    mobile_lcp: float = 0.0
+    mobile_cls: float = 0.0
+    desktop_fcp: float = 0.0
+    desktop_lcp: float = 0.0
+    desktop_cls: float = 0.0
+    gtmetrix_grade: str = ""
+    gtmetrix_performance_score: int = 0
+    gtmetrix_structure_score: int = 0
+    gtmetrix_page_load_time: float = 0.0
+    gtmetrix_page_size: int = 0
+    gtmetrix_requests: int = 0
+    pingdom_response_time: float = 0.0
+    pingdom_performance_grade: int = 0
+    pingdom_page_size: int = 0
+    pingdom_requests: int = 0
+    wpt_load_time: float = 0.0
+    wpt_first_byte: float = 0.0
+    wpt_start_render: float = 0.0
+    wpt_speed_index: float = 0.0
+    wpt_bytes_in: int = 0
+    wpt_requests: int = 0
+    
     # Keywords
     keyword_density: Dict[str, float] = {}
     most_common_keywords: List[str] = []

@@ -12,6 +12,7 @@ from app.core.logging import get_logger
 from app.services.core_web_vitals_service import CoreWebVitalsService
 from app.services.dns_service import DNSService
 from app.services.backlink_service import BacklinkService
+from app.services.performance_monitoring_service import PerformanceMonitoringService
 
 logger = get_logger(__name__)
 
@@ -50,6 +51,10 @@ class SEOScraperService:
             # Get backlink and domain authority metrics
             backlink_service = BacklinkService()
             domain_metrics = await backlink_service.get_domain_metrics(url)
+            
+            # Get performance monitoring metrics
+            perf_service = PerformanceMonitoringService()
+            perf_metrics = await perf_service.get_performance_metrics(url)
             
             if response.status_code != 200:
                 logger.warning(f"Non-200 status code {response.status_code} for {url}")
@@ -230,7 +235,39 @@ class SEOScraperService:
                 organic_cost=domain_metrics.get('organic_cost', 0.0),
                 adwords_keywords=domain_metrics.get('adwords_keywords', 0),
                 adwords_traffic=domain_metrics.get('adwords_traffic', 0),
-                adwords_cost=domain_metrics.get('adwords_cost', 0.0)
+                adwords_cost=domain_metrics.get('adwords_cost', 0.0),
+                
+                # Performance Monitoring Metrics
+                mobile_performance_score=perf_metrics.get('mobile_performance_score', 0),
+                mobile_accessibility_score=perf_metrics.get('mobile_accessibility_score', 0),
+                mobile_best_practices_score=perf_metrics.get('mobile_best_practices_score', 0),
+                mobile_seo_score=perf_metrics.get('mobile_seo_score', 0),
+                desktop_performance_score=perf_metrics.get('desktop_performance_score', 0),
+                desktop_accessibility_score=perf_metrics.get('desktop_accessibility_score', 0),
+                desktop_best_practices_score=perf_metrics.get('desktop_best_practices_score', 0),
+                desktop_seo_score=perf_metrics.get('desktop_seo_score', 0),
+                mobile_fcp=perf_metrics.get('mobile_fcp', 0.0),
+                mobile_lcp=perf_metrics.get('mobile_lcp', 0.0),
+                mobile_cls=perf_metrics.get('mobile_cls', 0.0),
+                desktop_fcp=perf_metrics.get('desktop_fcp', 0.0),
+                desktop_lcp=perf_metrics.get('desktop_lcp', 0.0),
+                desktop_cls=perf_metrics.get('desktop_cls', 0.0),
+                gtmetrix_grade=perf_metrics.get('gtmetrix_grade', ''),
+                gtmetrix_performance_score=perf_metrics.get('gtmetrix_performance_score', 0),
+                gtmetrix_structure_score=perf_metrics.get('gtmetrix_structure_score', 0),
+                gtmetrix_page_load_time=perf_metrics.get('gtmetrix_page_load_time', 0.0),
+                gtmetrix_page_size=perf_metrics.get('gtmetrix_page_size', 0),
+                gtmetrix_requests=perf_metrics.get('gtmetrix_requests', 0),
+                pingdom_response_time=perf_metrics.get('pingdom_response_time', 0.0),
+                pingdom_performance_grade=perf_metrics.get('pingdom_performance_grade', 0),
+                pingdom_page_size=perf_metrics.get('pingdom_page_size', 0),
+                pingdom_requests=perf_metrics.get('pingdom_requests', 0),
+                wpt_load_time=perf_metrics.get('wpt_load_time', 0.0),
+                wpt_first_byte=perf_metrics.get('wpt_first_byte', 0.0),
+                wpt_start_render=perf_metrics.get('wpt_start_render', 0.0),
+                wpt_speed_index=perf_metrics.get('wpt_speed_index', 0.0),
+                wpt_bytes_in=perf_metrics.get('wpt_bytes_in', 0),
+                wpt_requests=perf_metrics.get('wpt_requests', 0)
             )
             
         except Exception as e:
