@@ -424,6 +424,72 @@ class SEOEvaluatorService:
                 "evaluate": lambda data: data.adwords_keywords > 0,
                 "get_value": lambda data: f"Keywords: {data.adwords_keywords}, Traffic: {data.adwords_traffic}" if data.adwords_keywords > 0 else "No activity",
                 "recommendation": "Consider paid search advertising for competitive keywords."
+            },
+            
+            # Image Analysis & Optimization
+            {
+                "name": "Image Alt Text Coverage",
+                "category": "Image SEO",
+                "priority": "high",
+                "evaluate": lambda data: data.total_images == 0 or data.images_without_alt == 0,
+                "get_value": lambda data: f"{data.images_without_alt}/{data.total_images} missing alt text",
+                "recommendation": "Add descriptive alt text to all images for accessibility and SEO."
+            },
+            {
+                "name": "Image Format Optimization",
+                "category": "Image SEO",
+                "priority": "medium",
+                "evaluate": lambda data: data.total_images == 0 or data.unoptimized_formats <= data.total_images * 0.3,
+                "get_value": lambda data: f"{data.unoptimized_formats}/{data.total_images} need format optimization",
+                "recommendation": "Convert images to WebP format for better compression."
+            },
+            {
+                "name": "Image Size Optimization",
+                "category": "Image SEO",
+                "priority": "high",
+                "evaluate": lambda data: data.oversized_images == 0,
+                "get_value": lambda data: f"{data.oversized_images} oversized images (>500KB)",
+                "recommendation": "Compress large images to improve page load speed."
+            },
+            {
+                "name": "Lazy Loading Implementation",
+                "category": "Image SEO",
+                "priority": "medium",
+                "evaluate": lambda data: data.total_images == 0 or data.missing_lazy_loading <= data.total_images * 0.5,
+                "get_value": lambda data: f"{data.missing_lazy_loading}/{data.total_images} missing lazy loading",
+                "recommendation": "Implement lazy loading for images below the fold."
+            },
+            {
+                "name": "Image Dimensions Specified",
+                "category": "Image SEO",
+                "priority": "medium",
+                "evaluate": lambda data: data.total_images == 0 or data.images_without_dimensions == 0,
+                "get_value": lambda data: f"{data.images_without_dimensions}/{data.total_images} missing dimensions",
+                "recommendation": "Specify width and height attributes to prevent layout shift."
+            },
+            {
+                "name": "Broken Images Check",
+                "category": "Image SEO",
+                "priority": "high",
+                "evaluate": lambda data: data.broken_images == 0,
+                "get_value": lambda data: f"{data.broken_images} broken images",
+                "recommendation": "Fix or remove broken image links."
+            },
+            {
+                "name": "Alt Text Uniqueness",
+                "category": "Image SEO",
+                "priority": "low",
+                "evaluate": lambda data: data.duplicate_alt_texts == 0,
+                "get_value": lambda data: f"{data.duplicate_alt_texts} duplicate alt texts",
+                "recommendation": "Use unique, descriptive alt text for each image."
+            },
+            {
+                "name": "Image Compression Potential",
+                "category": "Image SEO",
+                "priority": "medium",
+                "evaluate": lambda data: data.compression_savings_kb <= 500,
+                "get_value": lambda data: f"{data.compression_savings_kb}KB potential savings",
+                "recommendation": "Compress images to reduce page load time and bandwidth usage."
             }
         ]
 

@@ -159,6 +159,20 @@ class ScrapedData(BaseModel):
     wpt_bytes_in: int = 0
     wpt_requests: int = 0
     
+    # Image Analysis & Optimization
+    total_images: int = 0
+    images_without_alt: int = 0
+    images_without_title: int = 0
+    oversized_images: int = 0
+    unoptimized_formats: int = 0
+    missing_lazy_loading: int = 0
+    images_without_dimensions: int = 0
+    broken_images: int = 0
+    duplicate_alt_texts: int = 0
+    ai_generated_alt_suggestions: int = 0
+    compression_savings_kb: int = 0
+    webp_conversion_candidates: int = 0
+    
     # Keywords
     keyword_density: Dict[str, float] = {}
     most_common_keywords: List[str] = []

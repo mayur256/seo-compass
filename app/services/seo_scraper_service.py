@@ -13,6 +13,7 @@ from app.services.core_web_vitals_service import CoreWebVitalsService
 from app.services.dns_service import DNSService
 from app.services.backlink_service import BacklinkService
 from app.services.performance_monitoring_service import PerformanceMonitoringService
+from app.services.image_analysis_service import ImageAnalysisService
 
 logger = get_logger(__name__)
 
@@ -55,6 +56,10 @@ class SEOScraperService:
             # Get performance monitoring metrics
             perf_service = PerformanceMonitoringService()
             perf_metrics = await perf_service.get_performance_metrics(url)
+            
+            # Get image analysis metrics
+            image_service = ImageAnalysisService()
+            image_metrics = await image_service.analyze_page_images(url, soup, self.client)
             
             if response.status_code != 200:
                 logger.warning(f"Non-200 status code {response.status_code} for {url}")
@@ -267,7 +272,21 @@ class SEOScraperService:
                 wpt_start_render=perf_metrics.get('wpt_start_render', 0.0),
                 wpt_speed_index=perf_metrics.get('wpt_speed_index', 0.0),
                 wpt_bytes_in=perf_metrics.get('wpt_bytes_in', 0),
-                wpt_requests=perf_metrics.get('wpt_requests', 0)
+                wpt_requests=perf_metrics.get('wpt_requests', 0),
+                
+                # Image Analysis Metrics
+                total_images=image_metrics.get('total_images', 0),
+                images_without_alt=image_metrics.get('images_without_alt', 0),
+                images_without_title=image_metrics.get('images_without_title', 0),
+                oversized_images=image_metrics.get('oversized_images', 0),
+                unoptimized_formats=image_metrics.get('unoptimized_formats', 0),
+                missing_lazy_loading=image_metrics.get('missing_lazy_loading', 0),
+                images_without_dimensions=image_metrics.get('images_without_dimensions', 0),
+                broken_images=image_metrics.get('broken_images', 0),
+                duplicate_alt_texts=image_metrics.get('duplicate_alt_texts', 0),
+                ai_generated_alt_suggestions=image_metrics.get('ai_generated_alt_suggestions', 0),
+                compression_savings_kb=image_metrics.get('compression_savings_kb', 0),
+                webp_conversion_candidates=image_metrics.get('webp_conversion_candidates', 0)
             )
             
         except Exception as e:
