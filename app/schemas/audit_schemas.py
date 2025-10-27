@@ -40,11 +40,15 @@ class AuditResult(BaseModel):
 
 
 class ScrapedData(BaseModel):
+    # Basic SEO
     title: Optional[str] = None
     meta_description: Optional[str] = None
     h1_tags: List[str] = []
     h2_tags: List[str] = []
     h3_tags: List[str] = []
+    h4_tags: List[str] = []
+    h5_tags: List[str] = []
+    h6_tags: List[str] = []
     canonical_tag: Optional[str] = None
     alt_missing_count: int = 0
     https: bool = False
@@ -52,3 +56,41 @@ class ScrapedData(BaseModel):
     text_to_html_ratio: float = 0.0
     robots_txt_exists: bool = False
     sitemap_exists: bool = False
+    
+    # Meta tags
+    og_title: Optional[str] = None
+    og_description: Optional[str] = None
+    og_image: Optional[str] = None
+    twitter_card: Optional[str] = None
+    twitter_title: Optional[str] = None
+    twitter_description: Optional[str] = None
+    
+    # Technical
+    charset: Optional[str] = None
+    viewport_tag: bool = False
+    favicon_exists: bool = False
+    noindex: bool = False
+    nofollow: bool = False
+    meta_refresh: Optional[str] = None
+    structured_data_count: int = 0
+    deprecated_tags_count: int = 0
+    
+    # Performance
+    html_size: int = 0
+    dom_size: int = 0
+    http_requests: int = 0
+    gzip_enabled: bool = False
+    
+    # Security
+    ssl_valid: bool = False
+    hsts_header: bool = False
+    mixed_content_count: int = 0
+    unsafe_links_count: int = 0
+    
+    # Keywords
+    keyword_density: Dict[str, float] = {}
+    most_common_keywords: List[str] = []
+    
+    # Files
+    ads_txt_exists: bool = False
+    custom_404_exists: bool = False
