@@ -11,6 +11,7 @@ from app.schemas.audit_schemas import ScrapedData
 from app.core.logging import get_logger
 from app.services.core_web_vitals_service import CoreWebVitalsService
 from app.services.dns_service import DNSService
+from app.services.backlink_service import BacklinkService
 
 logger = get_logger(__name__)
 
@@ -45,6 +46,10 @@ class SEOScraperService:
             # Get DNS records
             dns_service = DNSService()
             dns_records = await dns_service.check_dns_records(url)
+            
+            # Get backlink and domain authority metrics
+            backlink_service = BacklinkService()
+            domain_metrics = await backlink_service.get_domain_metrics(url)
             
             if response.status_code != 200:
                 logger.warning(f"Non-200 status code {response.status_code} for {url}")
@@ -207,7 +212,25 @@ class SEOScraperService:
                 
                 # Files
                 ads_txt_exists=ads_txt_exists,
-                custom_404_exists=custom_404_exists
+                custom_404_exists=custom_404_exists,
+                
+                # Third-party API Metrics
+                domain_authority=domain_metrics.get('domain_authority', 0),
+                page_authority=domain_metrics.get('page_authority', 0),
+                spam_score=domain_metrics.get('spam_score', 0),
+                linking_root_domains=domain_metrics.get('linking_root_domains', 0),
+                total_backlinks=domain_metrics.get('total_backlinks', 0),
+                domain_rating=domain_metrics.get('domain_rating', 0),
+                referring_domains=domain_metrics.get('referring_domains', 0),
+                backlinks=domain_metrics.get('backlinks', 0),
+                organic_keywords=domain_metrics.get('organic_keywords', 0),
+                organic_traffic=domain_metrics.get('organic_traffic', 0),
+                organic_keywords_semrush=domain_metrics.get('organic_keywords_semrush', 0),
+                organic_traffic_semrush=domain_metrics.get('organic_traffic_semrush', 0),
+                organic_cost=domain_metrics.get('organic_cost', 0.0),
+                adwords_keywords=domain_metrics.get('adwords_keywords', 0),
+                adwords_traffic=domain_metrics.get('adwords_traffic', 0),
+                adwords_cost=domain_metrics.get('adwords_cost', 0.0)
             )
             
         except Exception as e:

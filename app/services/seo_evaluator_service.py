@@ -358,6 +358,72 @@ class SEOEvaluatorService:
                 "evaluate": lambda data: data.plaintext_emails == 0,
                 "get_value": lambda data: f"Exposed: {data.plaintext_emails}",
                 "recommendation": "Avoid exposing email addresses to prevent spam."
+            },
+            
+            # Third-party API Metrics (Authority & Backlinks)
+            {
+                "name": "Domain Authority",
+                "category": "Authority",
+                "priority": "high",
+                "evaluate": lambda data: max(data.domain_authority, data.domain_rating) >= 40,
+                "get_value": lambda data: f"DA: {data.domain_authority}, DR: {data.domain_rating}",
+                "recommendation": "Build quality backlinks to improve domain authority."
+            },
+            {
+                "name": "Spam Score",
+                "category": "Authority",
+                "priority": "medium",
+                "evaluate": lambda data: data.spam_score <= 5,
+                "get_value": lambda data: f"{data.spam_score}%",
+                "recommendation": "Monitor and disavow toxic backlinks to reduce spam score."
+            },
+            {
+                "name": "Backlink Profile",
+                "category": "Backlinks",
+                "priority": "high",
+                "evaluate": lambda data: max(data.linking_root_domains, data.referring_domains) >= 20,
+                "get_value": lambda data: f"Domains: {max(data.linking_root_domains, data.referring_domains)}, Links: {max(data.total_backlinks, data.backlinks)}",
+                "recommendation": "Focus on acquiring backlinks from diverse, high-quality domains."
+            },
+            {
+                "name": "Organic Visibility",
+                "category": "Organic Search",
+                "priority": "high",
+                "evaluate": lambda data: max(data.organic_keywords, data.organic_keywords_semrush) >= 100,
+                "get_value": lambda data: f"Keywords: {max(data.organic_keywords, data.organic_keywords_semrush)}, Traffic: {max(data.organic_traffic, data.organic_traffic_semrush)}",
+                "recommendation": "Expand keyword targeting and improve content optimization."
+            },
+            {
+                "name": "Link Diversity",
+                "category": "Backlinks",
+                "priority": "medium",
+                "evaluate": lambda data: self._check_link_diversity_ratio(data),
+                "get_value": lambda data: f"Ratio: {self._get_link_diversity_ratio(data):.1f}",
+                "recommendation": "Maintain healthy link diversity (2-10 links per domain)."
+            },
+            {
+                "name": "Traffic Quality",
+                "category": "Organic Search",
+                "priority": "medium",
+                "evaluate": lambda data: data.organic_cost > 0 and (data.organic_cost / max(data.organic_traffic, data.organic_traffic_semrush, 1)) >= 0.5,
+                "get_value": lambda data: f"Value: ${(data.organic_cost / max(data.organic_traffic, data.organic_traffic_semrush, 1)):.2f}/visit" if data.organic_cost > 0 else "No data",
+                "recommendation": "Target higher commercial value keywords."
+            },
+            {
+                "name": "Competitive Position",
+                "category": "Competition",
+                "priority": "medium",
+                "evaluate": lambda data: max(data.domain_authority, data.domain_rating) >= 30 and max(data.organic_keywords, data.organic_keywords_semrush) >= 100,
+                "get_value": lambda data: "Strong" if max(data.domain_authority, data.domain_rating) >= 60 else "Moderate" if max(data.domain_authority, data.domain_rating) >= 30 else "Weak",
+                "recommendation": "Improve authority and keyword coverage to compete effectively."
+            },
+            {
+                "name": "Paid Search Presence",
+                "category": "Paid Search",
+                "priority": "low",
+                "evaluate": lambda data: data.adwords_keywords > 0,
+                "get_value": lambda data: f"Keywords: {data.adwords_keywords}, Traffic: {data.adwords_traffic}" if data.adwords_keywords > 0 else "No activity",
+                "recommendation": "Consider paid search advertising for competitive keywords."
             }
         ]
 
@@ -428,3 +494,22 @@ class SEOEvaluatorService:
         issues_to_fix.sort(key=lambda x: priority_order.get(x.priority, 3))
         
         return overall_score, issues_to_fix, common_issues
+    
+    def _check_link_diversity_ratio(self, data: ScrapedData) -> bool:
+        """Check if link diversity ratio is healthy (2-10 links per domain)"""
+        referring_domains = max(data.linking_root_domains, data.referring_domains)
+        if referring_domains == 0:
+            return False
+        
+        total_links = max(data.total_backlinks, data.backlinks)
+        ratio = total_links / referring_domains
+        return 2 <= ratio <= 10
+    
+    def _get_link_diversity_ratio(self, data: ScrapedData) -> float:
+        """Get link diversity ratio for display"""
+        referring_domains = max(data.linking_root_domains, data.referring_domains)
+        if referring_domains == 0:
+            return 0.0
+        
+        total_links = max(data.total_backlinks, data.backlinks)
+        return total_links / referring_domains

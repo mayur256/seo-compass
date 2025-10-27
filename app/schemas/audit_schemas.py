@@ -109,6 +109,24 @@ class ScrapedData(BaseModel):
     has_verification: bool = False
     plaintext_emails: int = 0
     
+    # Third-party API Metrics (Backlinks & Authority)
+    domain_authority: int = 0
+    page_authority: int = 0
+    spam_score: int = 0
+    linking_root_domains: int = 0
+    total_backlinks: int = 0
+    domain_rating: int = 0
+    referring_domains: int = 0
+    backlinks: int = 0
+    organic_keywords: int = 0
+    organic_traffic: int = 0
+    organic_keywords_semrush: int = 0
+    organic_traffic_semrush: int = 0
+    organic_cost: float = 0.0
+    adwords_keywords: int = 0
+    adwords_traffic: int = 0
+    adwords_cost: float = 0.0
+    
     # Keywords
     keyword_density: Dict[str, float] = {}
     most_common_keywords: List[str] = []
