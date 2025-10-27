@@ -257,25 +257,57 @@ class SEOEvaluatorService:
                 "name": "JavaScript Minification",
                 "category": "Performance",
                 "priority": "medium",
-                "evaluate": lambda data: getattr(data, 'js_minified', False),
-                "get_value": lambda data: "Minified" if getattr(data, 'js_minified', False) else "Not minified",
+                "evaluate": lambda data: data.js_minified,
+                "get_value": lambda data: "Minified" if data.js_minified else "Not minified",
                 "recommendation": "Minify JavaScript files."
             },
             {
                 "name": "CSS Minification",
                 "category": "Performance",
                 "priority": "medium",
-                "evaluate": lambda data: getattr(data, 'css_minified', False),
-                "get_value": lambda data: "Minified" if getattr(data, 'css_minified', False) else "Not minified",
+                "evaluate": lambda data: data.css_minified,
+                "get_value": lambda data: "Minified" if data.css_minified else "Not minified",
                 "recommendation": "Minify CSS files."
             },
             {
                 "name": "Modern Image Formats",
                 "category": "Performance",
                 "priority": "medium",
-                "evaluate": lambda data: getattr(data, 'webp_images', 0) > 0,
-                "get_value": lambda data: f"WebP: {getattr(data, 'webp_images', 0)}",
+                "evaluate": lambda data: data.webp_images > 0,
+                "get_value": lambda data: f"WebP: {data.webp_images}",
                 "recommendation": "Use WebP format for images."
+            },
+            {
+                "name": "First Contentful Paint (FCP)",
+                "category": "Core Web Vitals",
+                "priority": "high",
+                "evaluate": lambda data: data.fcp < 1.8,
+                "get_value": lambda data: f"{data.fcp:.2f}s",
+                "recommendation": "Optimize FCP to under 1.8 seconds."
+            },
+            {
+                "name": "Cumulative Layout Shift (CLS)",
+                "category": "Core Web Vitals",
+                "priority": "high",
+                "evaluate": lambda data: data.cls < 0.1,
+                "get_value": lambda data: f"{data.cls:.3f}",
+                "recommendation": "Keep CLS under 0.1 for good user experience."
+            },
+            {
+                "name": "Render-Blocking Resources",
+                "category": "Performance",
+                "priority": "high",
+                "evaluate": lambda data: data.render_blocking < 5,
+                "get_value": lambda data: f"{data.render_blocking} resources",
+                "recommendation": "Minimize render-blocking CSS and JavaScript."
+            },
+            {
+                "name": "JavaScript Execution Time",
+                "category": "Performance",
+                "priority": "medium",
+                "evaluate": lambda data: data.js_execution_time < 2.0,
+                "get_value": lambda data: f"{data.js_execution_time:.2f}s",
+                "recommendation": "Optimize JavaScript execution time."
             }
         ]
 

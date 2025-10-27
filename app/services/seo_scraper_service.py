@@ -1,6 +1,7 @@
 import asyncio
 import time
 import re
+import json
 from typing import Optional, Dict, List
 from collections import Counter
 import httpx
@@ -8,6 +9,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from app.schemas.audit_schemas import ScrapedData
 from app.core.logging import get_logger
+from app.services.core_web_vitals_service import CoreWebVitalsService
 
 logger = get_logger(__name__)
 
@@ -34,6 +36,10 @@ class SEOScraperService:
             start_time = time.time()
             response = await self.client.get(str(url))
             page_load_time = time.time() - start_time
+            
+            # Get Core Web Vitals
+            cwv_service = CoreWebVitalsService()
+            core_web_vitals = await cwv_service.collect_metrics(url)
             
             if response.status_code != 200:
                 logger.warning(f"Non-200 status code {response.status_code} for {url}")
@@ -77,6 +83,20 @@ class SEOScraperService:
             html_size = len(html_content)
             dom_size = len(soup.find_all())
             text_to_html_ratio = self._calculate_text_ratio(soup, html_content)
+            
+            # Browser-based metrics
+            http_requests = core_web_vitals.get('http_requests', 0)
+            render_blocking = core_web_vitals.get('render_blocking', 0)
+            js_minified = core_web_vitals.get('js_minified', False)
+            css_minified = core_web_vitals.get('css_minified', False)
+            webp_images = core_web_vitals.get('webp_images', 0)
+            http2_enabled = core_web_vitals.get('http2_enabled', False)
+            cdn_detected = core_web_vitals.get('cdn_detected', False)
+            media_queries = core_web_vitals.get('media_queries', 0)
+            fcp = core_web_vitals.get('fcp', 0)
+            lcp = core_web_vitals.get('lcp', 0)
+            cls = core_web_vitals.get('cls', 0)
+            ttfb = core_web_vitals.get('ttfb', page_load_time)
             
             # Keywords analysis
             keyword_data = self._analyze_keywords(soup)
@@ -144,8 +164,22 @@ class SEOScraperService:
                 # Performance
                 html_size=html_size,
                 dom_size=dom_size,
-                http_requests=0,  # Would need browser automation for accurate count
+                http_requests=http_requests,
                 gzip_enabled=gzip_enabled,
+                js_minified=core_web_vitals.get('js_minified', False),
+                css_minified=core_web_vitals.get('css_minified', False),
+                webp_images=core_web_vitals.get('webp_images', 0),
+                http2_enabled=core_web_vitals.get('http2_enabled', False),
+                cdn_detected=core_web_vitals.get('cdn_detected', False),
+                media_queries=core_web_vitals.get('media_queries', 0),
+                render_blocking=core_web_vitals.get('render_blocking', 0),
+                js_execution_time=core_web_vitals.get('js_execution_time', 0.0),
+                
+                # Core Web Vitals
+                fcp=core_web_vitals.get('fcp', 0.0),
+                lcp=core_web_vitals.get('lcp', 0.0),
+                cls=core_web_vitals.get('cls', 0.0),
+                ttfb=core_web_vitals.get('ttfb', page_load_time),
                 
                 # Security
                 ssl_valid=ssl_valid,

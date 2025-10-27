@@ -80,6 +80,20 @@ class ScrapedData(BaseModel):
     dom_size: int = 0
     http_requests: int = 0
     gzip_enabled: bool = False
+    js_minified: bool = False
+    css_minified: bool = False
+    webp_images: int = 0
+    http2_enabled: bool = False
+    cdn_detected: bool = False
+    media_queries: int = 0
+    render_blocking: int = 0
+    js_execution_time: float = 0.0
+    
+    # Core Web Vitals
+    fcp: float = 0.0  # First Contentful Paint
+    lcp: float = 0.0  # Largest Contentful Paint
+    cls: float = 0.0  # Cumulative Layout Shift
+    ttfb: float = 0.0  # Time To First Byte
     
     # Security
     ssl_valid: bool = False
